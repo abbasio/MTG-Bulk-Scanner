@@ -1,5 +1,6 @@
-import requests
 import os
+import json
+import requests
 import concurrent.futures
 
 
@@ -23,6 +24,15 @@ def get_cards(set):
             return
 
     get_card_pages(URL)
+
+    data_directory = "./data"
+    cards_json = json.dumps(data, indent=4)
+    path = os.path.join(data_directory, "{}.json".format(set))
+    if os.path.exists(path):
+        print("Data for this set already exists!")
+    else:
+        with open(path, "w") as data_file:
+            data_file.write(cards_json)
     return data
 
 
