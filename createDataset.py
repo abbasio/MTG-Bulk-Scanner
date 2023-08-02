@@ -1,6 +1,7 @@
-from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
-import json
 import os
+import json
+import random
+from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
 
 
 def generate_distorted_images(card):
@@ -8,27 +9,25 @@ def generate_distorted_images(card):
     set_name: str = card["set_name"]
     card_name: str = card["name"]
     card_id: str = card["id"]
-    img_quality: str = "-clean.jpg"
-    img_extension: str = ".jpg"
-    path = os.path.join(img_directory, set_name, card_name, card_id + img_quality)
+    img_number: str = "_0"
+    img_extension: str = ".png"
+    path = os.path.join(
+        img_directory, set_name, card_name, card_id + img_number + img_extension
+    )
     initial_image = Image.open(path)
     try:
-        for x in range(10):
+        for x in range(9):
+            img_number = "_" + str(x + 1)
             if x <= 1:
-                img_quality = "-clean"
                 img_data = initial_image
             else:
-                img_quality = "-dirty"
                 img_data = blur_image(initial_image)
             path = os.path.join(
-                img_directory,
-                set_name,
-                card_name,
-                card_id + img_quality + str(x) + img_extension,
+                img_directory, set_name, card_name, card_id + img_number + img_extension
             )
             if not os.path.exists(path):
                 img_data.save(path)
-                print("Printed {} images".format(str(x)))
+        print("Image data generated successfully!")
     except Exception as error:
         print(error)
 

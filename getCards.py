@@ -3,6 +3,7 @@ import json
 import requests
 import concurrent.futures
 from utils import items_to_clean
+from PIL import Image
 
 
 def get_cards(set: str) -> list:
@@ -55,7 +56,7 @@ def get_image(card: dict) -> bytes:
     img_file_name = card["id"]
     try:
         img_data = requests.get(img_link).content
-        card_path = os.path.join(path, "{}-clean.jpg".format(img_file_name))
+        card_path = os.path.join(path, "{}_0.png".format(img_file_name))
         with open(card_path, "wb") as img_file:
             img_file.write(img_data)
     except Exception as error:
@@ -74,6 +75,6 @@ def get_images_from_data(set: str):
         print(error)
 
 
-current_set = "war"
+current_set = "ktk"
 # get_cards(current_set)
 # get_images_from_data(current_set)
