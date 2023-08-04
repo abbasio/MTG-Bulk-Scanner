@@ -3,7 +3,6 @@ import json
 import requests
 import concurrent.futures
 from utils import items_to_clean
-from PIL import Image
 
 
 def get_cards(set: str) -> list:
@@ -75,6 +74,6 @@ def get_images_from_data(set: str):
         print(error)
 
 
-current_set = "ktk"
+current_set = ""
 # get_cards(current_set)
 # get_images_from_data(current_set)

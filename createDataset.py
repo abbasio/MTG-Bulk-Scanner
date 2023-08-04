@@ -1,7 +1,9 @@
 import os
 import json
-import random
-from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
+import time
+import concurrent.futures
+from PIL import Image
+from imageDistortion import random_edit_img
 
 
 def generate_distorted_images(card):
@@ -21,23 +23,30 @@ def generate_distorted_images(card):
             if x <= 1:
                 img_data = initial_image
             else:
-                img_data = blur_image(initial_image)
+                img_data = random_edit_img(initial_image)
             path = os.path.join(
                 img_directory, set_name, card_name, card_id + img_number + img_extension
             )
             if not os.path.exists(path):
                 img_data.save(path)
-        print("Image data generated successfully!")
+        print("Generated training images for {}".format(card_name))
     except Exception as error:
         print(error)
 
 
-def blur_image(image):
-    return image.filter(filter=ImageFilter.BLUR)
+def generate_dataset(set: str):
+    try:
+        start = time.time()
+        path = os.path.join("./data", "{}.json".format(set))
+        with open(path, "r") as openfile:
+            cards = json.load(openfile)
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            executor.map(generate_distorted_images, cards)
+        end = time.time()
+        print("Generated {} images in {} seconds".format(len(cards) * 9, end - start))
+    except Exception as error:
+        print(error)
 
 
-# test
-path = os.path.join("./data", "ktk.json")
-with open(path, "r") as openfile:
-    cards = json.load(openfile)
-generate_distorted_images(cards[0])
+current_set = ""
+# generate_dataset(current_set)
