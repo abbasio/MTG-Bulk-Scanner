@@ -17,17 +17,21 @@ def generate_distorted_images(card):
         img_directory, set_name, card_name, card_id + img_number + img_extension
     )
     initial_image = Image.open(path)
+    # Generate 2 clean images and 7 distored images per card
     try:
         for x in range(9):
             img_number = "_" + str(x + 1)
-            if x <= 1:
-                img_data = initial_image
-            else:
-                img_data = random_edit_img(initial_image)
             path = os.path.join(
                 img_directory, set_name, card_name, card_id + img_number + img_extension
             )
-            if not os.path.exists(path):
+            if os.path.exists(path):
+                print("Training data already exists for {}".format(card_name))
+                break
+            else:
+                if x <= 1:
+                    img_data = initial_image
+                else:
+                    img_data = random_edit_img(initial_image)
                 img_data.save(path)
         print("Generated training images for {}".format(card_name))
     except Exception as error:
