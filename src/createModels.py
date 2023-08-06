@@ -3,6 +3,7 @@ import random
 from PIL import Image
 import numpy as np
 import tensorflow as tf
+import json
 
 from tensorflow import keras
 from keras import layers
@@ -67,11 +68,15 @@ def train_set_CNN_model(
         # fit model to data
         model.fit(train_ds, validation_data=test_ds, epochs=epochs)
 
+        # test model
+        for x in range(10):
+            test_model(model, set_name, class_names)
+        # evaluate
+        loss, accuracy = model.evaluate(test_ds)
+        print(f"Loss: {loss}")
+        print(f"Accuracy: {accuracy}")
         # save model
         model.save(model_file)
-
-        # test model
-        test_model(model, set_name, class_names)
     except Exception as error:
         print(f"Error creating datasets for {set_name}")
         print(error)
@@ -103,7 +108,12 @@ def test_model(model: Sequential, set_name, class_names):
         print(error)
 
 
-model_name = ""
-set_name = ""
-# img_datasets = get_image_datasets(set_name)
-# train_set_CNN_model(model_name, img_datasets, set_name, 10)
+model_name = "test_model"
+set_name = "Fate Reforged"
+img_datasets = get_image_datasets(set_name)
+
+train_set_CNN_model(model_name, img_datasets, set_name)
+
+# test_model(model, set_name, class_names)
+
+# print(class_names)

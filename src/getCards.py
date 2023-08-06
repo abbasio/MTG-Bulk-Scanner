@@ -2,12 +2,17 @@ import os
 import json
 import requests
 import concurrent.futures
-from utils import items_to_clean, make_dirs
+from utils import items_to_clean, make_dirs, filter_lands
 
 
 def get_cards(set: str) -> list:
+    data_directory = "./data"
+    path = os.path.join(data_directory, f"{set}.json")
+    if os.path.exists(path):
+        print("Data for this set already exists!")
+        return
     data = []
-    URL = f"https://api.scryfall.com/cards/search?include_extras=true&include_variations=true&order=set&q=e%3A{set}&unique=prints"
+    URL = f"https://api.scryfall.com/cards/search?order=set&q=e%3A{set}"
 
     def get_card_pages(url):
         cards = requests.get(url).json()
@@ -15,7 +20,11 @@ def get_cards(set: str) -> list:
         cardsList = cards.get("data")
 
         for card in cardsList:
-            data.append(card)
+            if filter_lands(card):
+                for item in items_to_clean:
+                    if item in card:
+                        del card[item]
+                data.append(card)
 
         if isNextPage:
             get_card_pages(cards.get("next_page"))
@@ -23,22 +32,9 @@ def get_cards(set: str) -> list:
             return
 
     get_card_pages(URL)
-
-    # Clean data
-    for card in data:
-        for item in items_to_clean:
-            item_exists = item in card
-            if item_exists:
-                del card[item]
-
-    data_directory = "./data"
     cards_json = json.dumps(data, indent=4)
-    path = os.path.join(data_directory, f"{set}.json")
-    if os.path.exists(path):
-        print("Data for this set already exists!")
-    else:
-        with open(path, "w") as data_file:
-            data_file.write(cards_json)
+    with open(path, "w") as data_file:
+        data_file.write(cards_json)
     print(f"Successfully got data for {len(data)} cards")
     return data
 
@@ -68,10 +64,11 @@ def get_images_from_data(set: str):
             cards = json.load(openfile)
         with concurrent.futures.ThreadPoolExecutor() as executor:
             executor.map(get_image, cards)
+            executor.shutdown(wait=True)
     except Exception as error:
         print(error)
 
 
-current_set = ""
+current_set = "frf"
 # get_cards(current_set)
-# get_images_from_data(current_set)
+get_images_from_data(current_set)

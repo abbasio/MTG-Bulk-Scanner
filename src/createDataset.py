@@ -60,11 +60,12 @@ def generate_dataset(set: str):
             cards = json.load(openfile)
         with concurrent.futures.ThreadPoolExecutor() as executor:
             executor.map(generate_img_sets, cards)
+            executor.shutdown(wait=True)
         end = time.time()
         print("Generated {} images in {} seconds".format(len(cards) * 9, end - start))
     except Exception as error:
         print(error)
 
 
-current_set = ""
-# generate_dataset(current_set)
+current_set = "frf"
+generate_dataset(current_set)

@@ -48,3 +48,11 @@ def make_dirs(paths: list):
     for path in paths:
         if not os.path.exists(path):
             os.makedirs(path)
+
+
+def filter_lands(card):
+    basic_lands = ["Plains", "Island", "Swamp", "Mountain", "Forest"]
+    if card["name"] in basic_lands:
+        return False
+    else:
+        return True
