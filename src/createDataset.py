@@ -4,48 +4,62 @@ import time
 import concurrent.futures
 from PIL import Image
 from imageDistortion import random_edit_img
+from utils import make_dirs
 
 
-def generate_distorted_images(card):
-    img_directory: str = "./images"
+def generate_img_sets(card):
+    img_dir_base: str = "./images/base"
+    img_dir_training: str = "./images/training"
+    img_dir_testing: str = "./images/testing"
     set_name: str = card["set_name"]
     card_name: str = card["name"]
     card_id: str = card["id"]
-    img_number: str = "_0"
     img_extension: str = ".png"
-    path = os.path.join(
-        img_directory, set_name, card_name, card_id + img_number + img_extension
-    )
-    initial_image = Image.open(path)
-    # Generate 2 clean images and 7 distored images per card
+
+    training_path = os.path.join(img_dir_training, set_name, card_name)
+    testing_path = os.path.join(img_dir_testing, set_name, card_name)
+    make_dirs([training_path, testing_path])
+
+    base_path = os.path.join(img_dir_base, set_name, card_name + img_extension)
+    base_image = Image.open(base_path)
+    # Generate 2 clean images and 8 distorted images per card
     try:
-        for x in range(9):
-            img_number = "_" + str(x + 1)
-            path = os.path.join(
-                img_directory, set_name, card_name, card_id + img_number + img_extension
+        for x in range(10):
+            img_number = "_" + str(x)
+            img_file_training = os.path.join(
+                training_path, card_id + img_number + img_extension
             )
-            if os.path.exists(path):
-                print("Training data already exists for {}".format(card_name))
+            img_file_testing = os.path.join(
+                testing_path, card_id + img_number + img_extension
+            )
+            if os.path.exists(img_file_testing) or os.path.exists(img_file_training):
+                print(f"Data already exists for {card_name}")
                 break
             else:
-                if x <= 1:
-                    img_data = initial_image
-                else:
-                    img_data = random_edit_img(initial_image)
-                img_data.save(path)
-        print("Generated training images for {}".format(card_name))
+                img_data_training = base_image
+                img_data_testing = base_image
+                if x >= 2:
+                    img_data_testing = random_edit_img(base_image)
+                if x >= 3:
+                    img_data_training = random_edit_img(base_image)
+                img_data_training.resize((224, 312)).save(img_file_training)
+                img_data_testing.resize((224, 312)).save(img_file_testing)
+        print(f"Generated training and testing images for {card_name}")
     except Exception as error:
+        print(f"Error when generating images for {card_name}")
         print(error)
 
 
 def generate_dataset(set: str):
     try:
         start = time.time()
-        path = os.path.join("./data", "{}.json".format(set))
+        data_directory = "./data"
+        card_file = f"{set}.json"
+        path = os.path.join(data_directory, card_file)
         with open(path, "r") as openfile:
             cards = json.load(openfile)
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            executor.map(generate_distorted_images, cards)
+            executor.map(generate_img_sets, cards)
         end = time.time()
         print("Generated {} images in {} seconds".format(len(cards) * 9, end - start))
     except Exception as error:

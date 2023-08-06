@@ -1,3 +1,5 @@
+import os
+
 items_to_clean = [
     "object",
     "oracle_id",
@@ -40,3 +42,9 @@ items_to_clean = [
     "prices",
     "reprint",
 ]
+
+
+def make_dirs(paths: list):
+    for path in paths:
+        if not os.path.exists(path):
+            os.makedirs(path)
