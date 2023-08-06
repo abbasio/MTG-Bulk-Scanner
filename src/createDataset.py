@@ -12,12 +12,13 @@ def generate_img_sets(card):
     img_dir_training: str = "./images/training"
     img_dir_testing: str = "./images/testing"
     set_name: str = card["set_name"]
+    card_number: str = card["collector_number"]
     card_name: str = card["name"]
     card_id: str = card["id"]
     img_extension: str = ".png"
 
-    training_path = os.path.join(img_dir_training, set_name, card_name)
-    testing_path = os.path.join(img_dir_testing, set_name, card_name)
+    training_path = os.path.join(img_dir_training, set_name, card_number)
+    testing_path = os.path.join(img_dir_testing, set_name, card_number)
     make_dirs([training_path, testing_path])
 
     base_path = os.path.join(img_dir_base, set_name, card_name + img_extension)
@@ -58,13 +59,18 @@ def generate_dataset(set: str):
         path = os.path.join(data_directory, card_file)
         with open(path, "r") as openfile:
             cards = json.load(openfile)
+        cards_to_generate = len(cards) * 10
         with concurrent.futures.ThreadPoolExecutor() as executor:
             executor.map(generate_img_sets, cards)
+            executor.shutdown(wait=True)
         end = time.time()
-        print("Generated {} images in {} seconds".format(len(cards) * 9, end - start))
+        seconds = end - start
+        print(
+            f"Generated {cards_to_generate} training and {cards_to_generate} testing images in {seconds} seconds"
+        )
     except Exception as error:
         print(error)
 
 
-current_set = ""
-# generate_dataset(current_set)
+current_set = "frf"
+generate_dataset(current_set)

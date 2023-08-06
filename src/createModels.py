@@ -1,6 +1,7 @@
 import os
 import random
 from PIL import Image
+import json
 import numpy as np
 import tensorflow as tf
 
@@ -22,7 +23,7 @@ def get_image_datasets(set_name: str):
     test_ds = keras.utils.image_dataset_from_directory(
         test_path, "inferred", image_size=(312, 224)
     )
-    return (train_ds, test_ds)
+    return (train_ds.class_names, test_ds.class_names)
 
 
 def train_set_CNN_model(
@@ -31,7 +32,7 @@ def train_set_CNN_model(
     # save model
     model_dir = os.path.join("./models", set_name)
     make_dirs([model_dir])
-    model_file = os.path.join(model_dir, f"{model_name}.keras")
+    model_file = os.path.join(model_dir, f"{model_name}.json")
     if os.path.exists(model_file):
         raise Exception(f"Model already exists with name {model_name}")
 
@@ -68,42 +69,51 @@ def train_set_CNN_model(
         model.fit(train_ds, validation_data=test_ds, epochs=epochs)
 
         # save model
-        model.save(model_file)
+        with open(model_file, "w") as model_json:
+            model_json.write(model.to_json())
 
         # test model
-        test_model(model, set_name, class_names)
+        test_img_paths = [
+            "./images/base/Fate Reforged/Shu Yun, the Silent Tempest.png",
+            "./images/base/Fate Reforged/War Flare.png",
+            "./images/base/Fate Reforged/Dark Deal.png",
+            "./images/base/Fate Reforged/Fierce Invocation.png",
+            "./images/base/Fate Reforged/Shamanistic Revelation.png",
+        ]
+        for path in test_img_paths:
+            test_img_data = Image.open(path)
+            test_model(model, test_img_data)
     except Exception as error:
         print(f"Error creating datasets for {set_name}")
         print(error)
 
 
-def test_model(model: Sequential, set_name, class_names):
+def test_model(model: Sequential, image):
     cards = []
-    img_dir = os.path.join("./images/base", set_name)
-    card_list = os.listdir(img_dir)
-    card = random.choice(card_list)
-    card_path = os.path.join(img_dir, card)
-
-    # model_path = os.path.join("./models", set_name, model_name)
-    # model = tf.keras.models.load_model(model_path)
-
-    card_img = Image.open(card_path).resize((224, 312))
+    card_img = image.resize((224, 312))
     card_img_array = np.array(np.array(card_img) / 255)
     cards.append(card_img_array)
     try:
         cards = np.array(cards)
         result = model.predict(cards)
         result_index, confidence = np.argmax(result), result[0, np.argmax(result)]
-        predicted_card = class_names[result_index]
-        print(card)
         print(result_index)
-        print(predicted_card)
         print(confidence)
     except Exception as error:
         print(error)
 
 
-model_name = ""
-set_name = ""
-# img_datasets = get_image_datasets(set_name)
-# train_set_CNN_model(model_name, img_datasets, set_name, 10)
+# model_path = "./models/Fate Reforged/model_json.json"
+# json_file = open(model_path, "r")
+# loaded_model_json = json_file.read()
+# json_file.close()
+# model = tf.keras.models.load_model(model_path)
+# model = tf.keras.models.model_from_json(loaded_model_json)
+# img_path = "./images/base/Fate Reforged/Arcbond.png"
+# img_data = Image.open(img_path)
+# test_model(model, img_data)
+set_name = "Fate Reforged"
+img_datasets = get_image_datasets(set_name)
+print(img_datasets)
+# model_name = "model_0"
+# train_set_CNN_model(model_name, img_datasets, set_name, 1)
